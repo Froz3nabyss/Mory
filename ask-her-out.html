@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>A Question For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #341b3a;
+    --bg-mid: #6b2c46;
+    --accent-pink: #ff7aa2;
+    --accent-gold: #ffd76a;
+    --cream: #fff1e6;
+    --cream-dim: #f6dfe8;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(120% 120% at 50% 0%, var(--bg-mid) 0%, var(--bg-deep) 70%);
+    font-family: 'Quicksand', sans-serif;
+    touch-action: manipulation;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .sparkle {
+    position: absolute;
+    font-size: 20px;
+    opacity: 0.35;
+    animation: drift 6s ease-in-out infinite;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(10deg); }
+  }
+
+  .question {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    color: var(--cream);
+    font-size: clamp(2.4rem, 10vw, 3.6rem);
+    line-height: 1.1;
+    margin: 0 0 6px 0;
+    text-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .caption {
+    font-size: clamp(0.95rem, 3.2vw, 1.1rem);
+    color: var(--cream-dim);
+    margin: 0 0 44px 0;
+    min-height: 1.4em;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    transition: opacity 0.4s ease;
+  }
+
+  .button-row {
+    position: relative;
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: opacity 0.5s ease;
+  }
+
+  button.choice {
+    border: none;
+    border-radius: 999px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    padding: 16px 34px;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    letter-spacing: 0.3px;
+  }
+
+  #yesBtn {
+    position: relative;
+    background: linear-gradient(135deg, var(--accent-pink), #ff5c8a);
+    color: #3a0e1f;
+    box-shadow: 0 10px 24px rgba(255, 90, 130, 0.4);
+    z-index: 5;
+    transition: left 0.35s cubic-bezier(.2,1.4,.4,1), top 0.35s cubic-bezier(.2,1.4,.4,1), transform 0.15s ease;
+  }
+
+  #yesBtn:active { transform: scale(0.94); }
+
+  #noBtn {
+    background: transparent;
+    color: var(--cream-dim);
+    border: 2px solid rgba(255,241,230,0.35);
+    box-shadow: none;
+  }
+
+  #yesBtn.escaped {
+    position: fixed;
+  }
+
+  .hearts-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 20;
+  }
+
+  .heart {
+    position: absolute;
+    bottom: -60px;
+    font-size: var(--sz, 28px);
+    opacity: 0.95;
+    animation: rise var(--dur, 3.2s) ease-in var(--delay, 0s) forwards;
+  }
+
+  @keyframes rise {
+    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(-115vh) translateX(var(--drift, 20px)) rotate(var(--spin, 25deg)); opacity: 0; }
+  }
+
+  .finale {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    z-index: 30;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    transition: opacity 1s ease, transform 1s ease;
+    pointer-events: none;
+  }
+
+  .finale.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .finale h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(2.8rem, 12vw, 4.5rem);
+    color: var(--accent-gold);
+    margin: 0 0 8px 0;
+    text-shadow: 0 6px 22px rgba(0,0,0,0.4);
+  }
+
+  .finale p {
+    color: var(--cream-dim);
+    font-size: clamp(1rem, 3.6vw, 1.2rem);
+    margin: 0;
+  }
+
+  .finale-step {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .finale-step.step-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+  }
+
+  .date-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    max-width: 420px;
+    margin-top: 10px;
+  }
+
+  .date-btn {
+    border: 2px solid rgba(255,215,106,0.55);
+    background: rgba(255,215,106,0.08);
+    color: var(--cream);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 12px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .date-btn:active {
+    transform: scale(0.95);
+  }
+
+  .date-confirm {
+    margin-top: 22px;
+    font-family: 'Caveat', cursive;
+    font-size: clamp(1.8rem, 7vw, 2.4rem);
+    color: var(--accent-gold);
+  }
+
+  .hidden-fade {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  #soundToggle {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+    z-index: 40;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,241,230,0.25);
+    background: rgba(0,0,0,0.25);
+    color: var(--cream-dim);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    backdrop-filter: blur(4px);
+  }
+</style>
+</head>
+<body>
+
+  <button id="soundToggle" aria-label="Toggle music">🔈</button>
+
+  <div class="stage" id="stage">
+    <div class="sparkle" style="top:12%; left:14%;">✨</div>
+    <div class="sparkle" style="top:20%; right:10%; animation-delay: 1.2s;">💫</div>
+    <div class="sparkle" style="bottom:18%; left:10%; animation-delay: 2.4s;">✨</div>
+    <div class="sparkle" style="bottom:14%; right:14%; animation-delay: 0.6s;">💛</div>
+
+    <h1 class="question" id="questionText">Will you go out with me?</h1>
+    <p class="caption" id="captionText">just tap yes, it's easy&nbsp;:)</p>
+
+    <div class="button-row" id="buttonRow">
+      <button class="choice" id="yesBtn">Yes</button>
+      <button class="choice" id="noBtn">No</button>
+    </div>
+  </div>
+
+  <div class="finale" id="finale">
+    <div class="finale-step" id="finaleMessage">
+      <h1>Come see me 💕</h1>
+      <p>I'll be waiting.</p>
+    </div>
+
+    <div class="finale-step step-hidden" id="dateStep">
+      <h1>When date?</h1>
+      <div class="date-options" id="dateOptions">
+        <button class="date-btn" data-label="Ice cream date 🍦">Ice cream date</button>
+        <button class="date-btn" data-label="You scream date 😏">You scream date 😏</button>
+        <button class="date-btn" data-label="Movie night 🎬">Movie night</button>
+        <button class="date-btn" data-label="Alcohol night 🍷">Alcohol night</button>
+      </div>
+      <p class="date-confirm" id="dateConfirm"></p>
+    </div>
+  </div>
+
+  <script>
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const captionText = document.getElementById('captionText');
+    const questionText = document.getElementById('questionText');
+    const buttonRow = document.getElementById('buttonRow');
+    const stage = document.getElementById('stage');
+    const finale = document.getElementById('finale');
+    const finaleMessage = document.getElementById('finaleMessage');
+    const dateStep = document.getElementById('dateStep');
+    const dateOptions = document.getElementById('dateOptions');
+    const dateConfirm = document.getElementById('dateConfirm');
+
+    let attempts = 0;
+    const captions = [
+      "just tap yes, it's easy :)",
+      "oops, try again",
+      "come on, one more try...",
+    ];
+
+    // --- soft synth background music (generated in-browser, no audio file needed) ---
+    const music = (() => {
+      let ctx = null;
+      let master = null;
+      let started = false;
+      let muted = false;
+      let chordIndex = 0;
+
+      const chords = [
+        [174.61, 220.00, 261.63], // F major
+        [130.81, 164.81, 196.00], // C major
+        [220.00, 261.63, 329.63], // A minor
+        [196.00, 246.94, 293.66], // G major
+      ];
+      const melodyScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+
+      function ensureContext() {
+        if (!ctx) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          master = ctx.createGain();
+          master.gain.value = 0.16;
+          master.connect(ctx.destination);
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+      }
+
+      function playTone(freq, startTime, duration, peak, type) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq;
+        osc.connect(g);
+        g.connect(master);
+        g.gain.setValueAtTime(0, startTime);
+        g.gain.linearRampToValueAtTime(peak, startTime + duration * 0.35);
+        g.gain.linearRampToValueAtTime(0, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+      }
+
+      function scheduleLoop() {
+        const chordDur = 4.2;
+        const notes = chords[chordIndex % chords.length];
+        const now = ctx.currentTime + 0.05;
+
+        notes.forEach((f) => playTone(f, now, chordDur, 0.05, 'sine'));
+
+        const melodyCount = Math.random() < 0.6 ? 1 : 2;
+        for (let i = 0; i < melodyCount; i++) {
+          const offset = 0.6 + Math.random() * (chordDur - 1.2);
+          const freq = melodyScale[Math.floor(Math.random() * melodyScale.length)];
+          playTone(freq, now + offset, 1.1, 0.045, 'triangle');
+        }
+
+        chordIndex++;
+        setTimeout(scheduleLoop, chordDur * 1000);
+      }
+
+      function start() {
+        if (started) return;
+        ensureContext();
+        started = true;
+        scheduleLoop();
+      }
+
+      function toggleMute() {
+        muted = !muted;
+        if (master) {
+          master.gain.linearRampToValueAtTime(muted ? 0 : 0.16, ctx.currentTime + 0.3);
+        }
+        return muted;
+      }
+
+      return { start, toggleMute };
+    })();
+
+    // start music on the very first tap anywhere (satisfies mobile autoplay rules)
+    document.addEventListener('pointerdown', () => music.start(), { capture: true, once: true });
+
+    const soundToggle = document.getElementById('soundToggle');
+    soundToggle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      music.start();
+      const muted = music.toggleMute();
+      soundToggle.textContent = muted ? '🔇' : '🔈';
+    });
+
+    // No button: fully inert, never responds
+    noBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    function moveYesButton() {
+      const rect = yesBtn.getBoundingClientRect();
+      const pad = 16;
+      const maxLeft = window.innerWidth - rect.width - pad;
+      const maxTop = window.innerHeight - rect.height - pad;
+
+      if (!yesBtn.classList.contains('escaped')) {
+        // lock current visual position before switching to fixed
+        yesBtn.style.left = rect.left + 'px';
+        yesBtn.style.top = rect.top + 'px';
+        yesBtn.classList.add('escaped');
+        // force reflow so the transition applies to the next change
+        void yesBtn.offsetWidth;
+      }
+
+      const newLeft = Math.max(pad, Math.random() * maxLeft);
+      const newTop = Math.max(pad, Math.random() * maxTop);
+
+      yesBtn.style.left = newLeft + 'px';
+      yesBtn.style.top = newTop + 'px';
+    }
+
+    function spawnHearts() {
+      const layer = document.createElement('div');
+      layer.className = 'hearts-layer';
+      document.body.appendChild(layer);
+
+      const emojis = ['💖','💕','💗','❤️','💘','💓'];
+      const count = 55;
+
+      for (let i = 0; i < count; i++) {
+        const h = document.createElement('span');
+        h.className = 'heart';
+        h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        const left = Math.random() * 100;
+        const size = 20 + Math.random() * 26;
+        const dur = 2.6 + Math.random() * 2.2;
+        const delay = Math.random() * 1.4;
+        const drift = (Math.random() - 0.5) * 160;
+        const spin = (Math.random() - 0.5) * 100;
+
+        h.style.left = left + 'vw';
+        h.style.setProperty('--sz', size + 'px');
+        h.style.setProperty('--dur', dur + 's');
+        h.style.setProperty('--delay', delay + 's');
+        h.style.setProperty('--drift', drift + 'px');
+        h.style.setProperty('--spin', spin + 'deg');
+
+        layer.appendChild(h);
+      }
+
+      return layer;
+    }
+
+    function handleYesTap() {
+      attempts++;
+
+      if (attempts < 3) {
+        captionText.style.opacity = 0;
+        setTimeout(() => {
+          captionText.textContent = captions[attempts];
+          captionText.style.opacity = 1;
+        }, 200);
+        moveYesButton();
+        return;
+      }
+
+      // third tap: she said yes
+      questionText.classList.add('hidden-fade');
+      captionText.classList.add('hidden-fade');
+      buttonRow.classList.add('hidden-fade');
+
+      const heartsLayer = spawnHearts();
+
+      setTimeout(() => {
+        finale.classList.add('show');
+      }, 1600);
+
+      setTimeout(() => {
+        heartsLayer.remove();
+      }, 6000);
+
+      setTimeout(() => {
+        finaleMessage.classList.add('step-hidden');
+        dateStep.classList.remove('step-hidden');
+      }, 4200);
+    }
+
+    dateOptions.querySelectorAll('.date-btn').forEach((btn) => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        dateOptions.classList.add('hidden-fade');
+        dateConfirm.textContent = btn.dataset.label + ' it is 💕';
+      });
+    });
+
+    yesBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      handleYesTap();
+    });
+
+    window.addEventListener('resize', () => {
+      if (yesBtn.classList.contains('escaped') && attempts < 3) {
+        const rect = yesBtn.getBoundingClientRect();
+        const pad = 16;
+        const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+        const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+        yesBtn.style.left = Math.min(parseFloat(yesBtn.style.left || 0), maxLeft) + 'px';
+        yesBtn.style.top = Math.min(parseFloat(yesBtn.style.top || 0), maxTop) + 'px';
+      }
+    });
+  </script>
+
+</body>
+</html>
